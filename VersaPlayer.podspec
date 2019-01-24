@@ -8,16 +8,15 @@
 
 Pod::Spec.new do |s|
     s.name             = 'VersaPlayer'
-    s.version          = '2.2.3'
+    s.version          = '2.2.4+akisute'
     s.summary          = 'Versatile AVPlayer implementation'
     
     s.description      = 'Versatile AVPlayer implementation.'
     
-    s.homepage         = 'https://github.com/josejuanqm/VersaPlayer'
+    s.homepage         = 'https://github.com/akisute/VersaPlayer'
     s.license          = { :type => 'MIT', :file => 'LICENSE' }
     s.author           = { 'Jose Quintero' => 'jose.juan.qm@gmail.com' }
-    s.source           = { :git => 'https://github.com/josejuanqm/VersaPlayer.git', :tag => s.version.to_s }
-    s.social_media_url = 'https://twitter.com/josejuanqm'
+    s.source           = { :git => 'https://github.com/akisute/VersaPlayer.git', :tag => s.version.to_s }
     
     s.ios.deployment_target = '9.0'
     s.tvos.deployment_target = '9.0'

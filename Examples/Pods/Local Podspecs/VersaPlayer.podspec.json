@@ -1,9 +1,9 @@
 {
   "name": "VersaPlayer",
-  "version": "2.2.3",
+  "version": "2.2.4+akisute",
   "summary": "Versatile AVPlayer implementation",
   "description": "Versatile AVPlayer implementation.",
-  "homepage": "https://github.com/josejuanqm/VersaPlayer",
+  "homepage": "https://github.com/akisute/VersaPlayer",
   "license": {
     "type": "MIT",
     "file": "LICENSE"
@@ -12,10 +12,9 @@
     "Jose Quintero": "jose.juan.qm@gmail.com"
   },
   "source": {
-    "git": "https://github.com/josejuanqm/VersaPlayer.git",
-    "tag": "2.2.3"
+    "git": "https://github.com/akisute/VersaPlayer.git",
+    "tag": "2.2.4+akisute"
   },
-  "social_media_url": "https://twitter.com/josejuanqm",
   "platforms": {
     "ios": "9.0",
     "tvos": "9.0",
