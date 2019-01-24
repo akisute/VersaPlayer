@@ -13,9 +13,6 @@ open class VersaPlayerLayer: CALayer {
     
     /// Player Layer to be used
     public var playerLayer: AVPlayerLayer!
-    
-    /// VersaPlayer instance being rendered
-    public weak var handler: VersaPlayerView!
 
     deinit {
       #if DEBUG

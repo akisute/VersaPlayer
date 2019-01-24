@@ -17,10 +17,10 @@ import AVFoundation
 open class VersaPlayerControlsCoordinator: View, VersaPlayerGestureRecieverViewDelegate {
 
     /// VersaPlayer instance being used
-    weak var player: VersaPlayerView!
+    public weak var player: VersaPlayerView?
     
     /// VersaPlayerControls instance being used
-    weak public var controls: VersaPlayerControls!
+    public weak var controls: VersaPlayerControls?
     
     /// VersaPlayerGestureRecieverView instance being used
     public var gestureReciever: VersaPlayerGestureRecieverView!
@@ -60,7 +60,7 @@ open class VersaPlayerControlsCoordinator: View, VersaPlayerGestureRecieverViewD
     public func configureView() {
         if let h = superview as? VersaPlayerView {
             player = h
-            if controls != nil {
+            if let controls = controls {
                 addSubview(controls)
             }
             if gestureReciever == nil {
@@ -100,9 +100,11 @@ open class VersaPlayerControlsCoordinator: View, VersaPlayerGestureRecieverViewD
     /// - Parameters:
     ///     - point: CGPoint at which tap was recognized
     open func didTap(at point: CGPoint) {
+        guard let controls = controls else { return }
+        // Toggle between show/hide of the controls
         if controls.behaviour.showingControls {
             controls.behaviour.hide()
-        }else {
+        } else {
             controls.behaviour.show()
         }
     }
@@ -112,10 +114,19 @@ open class VersaPlayerControlsCoordinator: View, VersaPlayerGestureRecieverViewD
     /// - Parameters:
     ///     - point: CGPoint at which tap was recognized
     open func didDoubleTap(at point: CGPoint) {
-        if player.renderingView.renderingLayer.playerLayer.videoGravity == AVLayerVideoGravity.resizeAspect {
-            player.renderingView.renderingLayer.playerLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-        }else {
-            player.renderingView.renderingLayer.playerLayer.videoGravity = AVLayerVideoGravity.resizeAspect
+        guard let player = player else { return }
+        // Toggle between resizeAspect and resizeAspectFill of the video gravity
+        switch player.renderingView.renderingLayer.playerLayer.videoGravity {
+        case .resizeAspect:
+            player.renderingView.renderingLayer.playerLayer.videoGravity = .resizeAspectFill
+        case .resizeAspectFill:
+            player.renderingView.renderingLayer.playerLayer.videoGravity = .resizeAspect
+        case .resize:
+            // Do nothing for non-aspect resize
+            break
+        default:
+            // NEVER happens because AVLayerVideoGravity is an ObjC enum so this switch is actually exhaustive...
+            break
         }
     }
     

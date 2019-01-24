@@ -21,10 +21,12 @@ import MediaPlayer
 open class VersaPlayerControls: View {
     
     /// VersaPlayer intance being controlled
-    public weak var handler: VersaPlayerView!
+    public weak var handler: VersaPlayerView?
     
     /// VersaPlayerControlsBehaviour being used to validate ui
-    public var behaviour: VersaPlayerControlsBehaviour!
+    public private(set) lazy var behaviour: VersaPlayerControlsBehaviour! = {
+        return VersaPlayerControlsBehaviour(with: self)
+    }()
     
     #if os(iOS)
     public var airplayButton: MPVolumeView? = nil
@@ -84,9 +86,9 @@ open class VersaPlayerControls: View {
         NotificationCenter.default.removeObserver(self, name: VersaPlayer.VPlayerNotificationName.pause.notification, object: nil)
         NotificationCenter.default.removeObserver(self, name: VersaPlayer.VPlayerNotificationName.buffering.notification, object: nil)
         NotificationCenter.default.removeObserver(self, name: VersaPlayer.VPlayerNotificationName.endBuffering.notification, object: nil)
-
+        
         #if DEBUG
-            print("4 \(String(describing: self))")
+        print("4 \(String(describing: self))")
         #endif
     }
     
@@ -117,9 +119,6 @@ open class VersaPlayerControls: View {
     public func layoutInSuperview() {
         if let h = superview as? VersaPlayerControlsCoordinator {
             handler = h.player
-            if behaviour == nil {
-                behaviour = VersaPlayerControlsBehaviour(with: self)
-            }
             prepare()
         }
     }
@@ -129,6 +128,7 @@ open class VersaPlayerControls: View {
     /// - Parameters:
     ///     - time: CMTime representation of the current playback time
     open func timeDidChange(toTime time: CMTime) {
+        guard let handler = handler else { return }
         currentTimeLabel?.update(toTime: time.seconds)
         totalTimeLabel?.update(toTime: handler.player.endTime().seconds)
         setSeekbarSlider(start: handler.player.startTime().seconds, end: handler.player.endTime().seconds, at: time.seconds)
@@ -253,48 +253,53 @@ open class VersaPlayerControls: View {
             bottomAnchor.constraint(equalTo: parent.bottomAnchor).isActive = true
         }
     }
-
+    
     /// Detect the notfication listener
     private func checkOwnershipOf(object: Any?, completion: @autoclosure ()->()?) {
-      guard let ownerPlayer = object as? VersaPlayer else { return }
-      if ownerPlayer.isEqual(handler?.player) {
-        completion()
-      }
+        guard let ownerPlayer = object as? VersaPlayer else { return }
+        if ownerPlayer.isEqual(handler?.player) {
+            completion()
+        }
     }
-
+    
     /// Prepares the notification observers/listeners
     open func prepareNotificationListener() {
-      NotificationCenter.default.addObserver(forName: VersaPlayer.VPlayerNotificationName.timeChanged.notification, object: nil, queue: OperationQueue.main) { [weak self] (notification) in
-        guard let self = self else { return }
-        if let time = notification.userInfo?[VersaPlayer.VPlayerNotificationInfoKey.time.rawValue] as? CMTime {
-          self.checkOwnershipOf(object: notification.object, completion: self.timeDidChange(toTime: time))
+        NotificationCenter.default.addObserver(forName: VersaPlayer.VPlayerNotificationName.timeChanged.notification, object: nil, queue: OperationQueue.main) { [weak self] (notification) in
+            guard let self = self else { return }
+            if let time = notification.userInfo?[VersaPlayer.VPlayerNotificationInfoKey.time.rawValue] as? CMTime {
+                self.checkOwnershipOf(object: notification.object, completion: self.timeDidChange(toTime: time))
+            }
         }
-      }
-      NotificationCenter.default.addObserver(forName: VersaPlayer.VPlayerNotificationName.didEnd.notification, object: nil, queue: OperationQueue.main) { [weak self] (notification) in
-        guard let self = self else { return }
-        self.checkOwnershipOf(object: notification.object, completion: self.playPauseButton?.set(active: false))
-      }
-      NotificationCenter.default.addObserver(forName: VersaPlayer.VPlayerNotificationName.play.notification, object: nil, queue: OperationQueue.main) { [weak self]  (notification) in
-        guard let self = self else { return }
-        self.checkOwnershipOf(object: notification.object, completion: self.playPauseButton?.set(active: true))
-      }
-      NotificationCenter.default.addObserver(forName: VersaPlayer.VPlayerNotificationName.pause.notification, object: nil, queue: OperationQueue.main) {[weak self] (notification) in
-        guard let self = self else { return }
-        self.checkOwnershipOf(object: notification.object, completion: self.playPauseButton?.set(active: false))
-      }
-      NotificationCenter.default.addObserver(forName: VersaPlayer.VPlayerNotificationName.endBuffering.notification, object: nil, queue: OperationQueue.main) {[weak self] (notification) in
-        guard let self = self else { return }
-        self.checkOwnershipOf(object: notification.object, completion: self.hideBuffering())
-      }
-      NotificationCenter.default.addObserver(forName: VersaPlayer.VPlayerNotificationName.buffering.notification, object: nil, queue: OperationQueue.main) {[weak self] (notification) in
-        guard let self = self else { return }
-        self.checkOwnershipOf(object: notification.object, completion: self.showBuffering())
-      }
+        NotificationCenter.default.addObserver(forName: VersaPlayer.VPlayerNotificationName.didEnd.notification, object: nil, queue: OperationQueue.main) { [weak self] (notification) in
+            guard let self = self else { return }
+            self.checkOwnershipOf(object: notification.object, completion: self.playPauseButton?.set(active: false))
+        }
+        NotificationCenter.default.addObserver(forName: VersaPlayer.VPlayerNotificationName.play.notification, object: nil, queue: OperationQueue.main) { [weak self]  (notification) in
+            guard let self = self else { return }
+            self.checkOwnershipOf(object: notification.object, completion: self.playPauseButton?.set(active: true))
+        }
+        NotificationCenter.default.addObserver(forName: VersaPlayer.VPlayerNotificationName.pause.notification, object: nil, queue: OperationQueue.main) {[weak self] (notification) in
+            guard let self = self else { return }
+            self.checkOwnershipOf(object: notification.object, completion: self.playPauseButton?.set(active: false))
+        }
+        NotificationCenter.default.addObserver(forName: VersaPlayer.VPlayerNotificationName.endBuffering.notification, object: nil, queue: OperationQueue.main) {[weak self] (notification) in
+            guard let self = self else { return }
+            self.checkOwnershipOf(object: notification.object, completion: self.hideBuffering())
+        }
+        NotificationCenter.default.addObserver(forName: VersaPlayer.VPlayerNotificationName.buffering.notification, object: nil, queue: OperationQueue.main) {[weak self] (notification) in
+            guard let self = self else { return }
+            self.checkOwnershipOf(object: notification.object, completion: self.showBuffering())
+        }
     }
     
     /// Prepare the seekbar values
     open func prepareSeekbar() {
-        setSeekbarSlider(start: handler.player.startTime().seconds, end: handler.player.endTime().seconds, at: handler.player.currentTime().seconds)
+        if let handler = handler {
+            setSeekbarSlider(start: handler.player.startTime().seconds, end: handler.player.endTime().seconds, at: handler.player.currentTime().seconds)
+        } else {
+            // No handler, treat it as if no playerItem is available in the `handler.player` (use 0 seconds)
+            setSeekbarSlider(start: 0, end: 0, at: 0)
+        }
     }
     
     /// Show buffering view
@@ -309,18 +314,21 @@ open class VersaPlayerControls: View {
     
     /// Skip forward (n) seconds in time
     @IBAction open func skipForward(sender: Any? = nil) {
+        guard let handler = handler else { return }
         let time = handler.player.currentTime() + CMTime(seconds: skipSize, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         handler.player.seek(to: time)
     }
     
     /// Skip backward (n) seconds in time
     @IBAction open func skipBackward(sender: Any? = nil) {
+        guard let handler = handler else { return }
         let time = handler.player.currentTime() - CMTime(seconds: skipSize, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         handler.player.seek(to: time)
     }
     
     /// End seeking
     @IBAction open func seekingEnd(sender: Any? = nil) {
+        guard let handler = handler else { return }
         handler.isSeeking = false
         if wasPlayingBeforeSeeking {
             handler.play()
@@ -329,6 +337,7 @@ open class VersaPlayerControls: View {
     
     /// Start Seeking
     @IBAction open func seekingStart(sender: Any? = nil) {
+        guard let handler = handler else { return }
         wasPlayingBeforeSeeking = handler.isPlaying
         handler.isSeeking = true
         handler.pause()
@@ -356,6 +365,7 @@ open class VersaPlayerControls: View {
     /// - Parameters:
     ///     - sender: UISlider that updated
     @IBAction open func playheadChanged(with sender: UISlider) {
+        guard let handler = handler else { return }
         handler.isSeeking = true
         let value = Double(sender.value)
         let time = CMTime(seconds: value, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
@@ -365,6 +375,7 @@ open class VersaPlayerControls: View {
     
     /// Toggle PIP mode
     @IBAction open func togglePip() {
+        guard let handler = handler else { return }
         handler.setNativePip(enabled: !handler.isPipModeEnabled)
     }
     
@@ -372,16 +383,18 @@ open class VersaPlayerControls: View {
     
     /// Toggle fullscreen mode
     @IBAction open func toggleFullscreen(sender: Any? = nil) {
+        guard let handler = handler else { return }
         fullscreenButton?.set(active: !handler.isFullscreenModeEnabled)
         handler.setFullscreen(enabled: !handler.isFullscreenModeEnabled)
     }
     
     /// Toggle playback
     @IBAction open func togglePlayback(sender: Any? = nil) {
+        guard let handler = handler else { return }
         if handler.isRewinding || handler.isForwarding {
             handler.player.rate = 1
             playPauseButton?.set(active: true)
-            return;
+            return
         }
         if handler.isPlaying {
             playPauseButton?.set(active: false)
@@ -396,16 +409,17 @@ open class VersaPlayerControls: View {
     
     /// Toggle rewind
     @IBAction open func rewindToggle(sender: Any? = nil) {
+        guard let handler = handler else { return }
         if handler.player.currentItem?.canPlayFastReverse ?? false {
             if handler.isRewinding {
                 rewindButton?.set(active: false)
                 handler.player.rate = 1
                 if wasPlayingBeforeRewinding {
                     handler.play()
-                }else {
+                } else {
                     handler.pause()
                 }
-            }else {
+            } else {
                 playPauseButton?.set(active: false)
                 rewindButton?.set(active: true)
                 wasPlayingBeforeRewinding = handler.isPlaying
@@ -419,16 +433,17 @@ open class VersaPlayerControls: View {
     
     /// Forward toggle
     @IBAction open func forwardToggle(sender: Any? = nil) {
+        guard let handler = handler else { return }
         if handler.player.currentItem?.canPlayFastForward ?? false {
             if handler.isForwarding {
                 forwardButton?.set(active: false)
                 handler.player.rate = 1
                 if wasPlayingBeforeForwarding {
                     handler.play()
-                }else {
+                } else {
                     handler.pause()
                 }
-            }else {
+            } else {
                 playPauseButton?.set(active: false)
                 forwardButton?.set(active: true)
                 wasPlayingBeforeForwarding = handler.isPlaying
@@ -439,5 +454,5 @@ open class VersaPlayerControls: View {
             }
         }
     }
-
+    
 }

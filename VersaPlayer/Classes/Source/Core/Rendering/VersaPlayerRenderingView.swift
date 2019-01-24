@@ -17,9 +17,6 @@ open class VersaPlayerRenderingView: View {
     
     /// VPlayerLayer instance used to render player content
     public var renderingLayer: VersaPlayerLayer!
-    
-    /// VersaPlayer instance being rendered by renderingLayer
-    public weak var player: VersaPlayerView!
 
     deinit {
       #if DEBUG
@@ -34,7 +31,6 @@ open class VersaPlayerRenderingView: View {
     public init(with player: VersaPlayerView) {
         super.init(frame: CGRect.zero)
         initializeRenderingLayer(with: player)
-        self.player = player
     }
     
     required public init?(coder aDecoder: NSCoder) {
