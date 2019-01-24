@@ -9,9 +9,9 @@
 Pod::Spec.new do |s|
     s.name             = 'VersaPlayer'
     s.version          = '2.2.3'
-    s.summary          = 'Versatile AVPlayer implementation for iOS'
+    s.summary          = 'Versatile AVPlayer implementation'
     
-    s.description      = 'Versatile AVPlayer implementation for iOS.'
+    s.description      = 'Versatile AVPlayer implementation.'
     
     s.homepage         = 'https://github.com/josejuanqm/VersaPlayer'
     s.license          = { :type => 'MIT', :file => 'LICENSE' }

@@ -102,6 +102,15 @@ To run the example project, clone the repo, and run `pod install` from the Examp
 
 ## Installation
 
+VersaPlayer requires the following environment to build.
+
+- Xcode 9.3 and Swift 4.2
+- CocoaPods (should be the latest one, tested in 1.5.3/1.6.0beta2)
+- Runtime OS version
+  - macOS 10.13 or later
+  - iOS 9.0 or  later
+  - tvOS 9.0 or later
+
 [CocoaPods](http://cocoapods.org) is a dependency manager for Cocoa projects.
 You can install it with the following command:
 

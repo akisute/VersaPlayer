@@ -1,8 +1,8 @@
 {
   "name": "VersaPlayer",
-  "version": "2.2.1",
-  "summary": "Versatile AVPlayer implementation for iOS",
-  "description": "Versatile AVPlayer implementation for iOS.",
+  "version": "2.2.3",
+  "summary": "Versatile AVPlayer implementation",
+  "description": "Versatile AVPlayer implementation.",
   "homepage": "https://github.com/josejuanqm/VersaPlayer",
   "license": {
     "type": "MIT",
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/josejuanqm/VersaPlayer.git",
-    "tag": "2.2.1"
+    "tag": "2.2.3"
   },
   "social_media_url": "https://twitter.com/josejuanqm",
   "platforms": {
@@ -21,6 +21,6 @@
     "tvos": "9.0",
     "osx": "10.13"
   },
-  "swift_version": "4",
+  "swift_version": "4.2",
   "source_files": "VersaPlayer/Classes/**/*"
 }
