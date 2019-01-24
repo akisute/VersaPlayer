@@ -15,12 +15,6 @@ public class VersaPlayerCaptionStyling {
     init(with player: VersaPlayer) {
         self.player = player
     }
-
-    deinit {
-      #if DEBUG
-          print("10 \(String(describing: self))")
-      #endif
-    }
     
     /// Get attribute
     public var rules: [AVTextStyleRule]? {

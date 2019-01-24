@@ -41,12 +41,6 @@ open class VersaPlayerControlsBehaviour {
     
     /// Custom activation block
     public var activationBlock: ((VersaPlayerControls) -> Void)? = nil
-
-    deinit {
-      #if DEBUG
-          print("5 \(String(describing: self))")
-      #endif
-    }
     
     /// Constructor
     ///

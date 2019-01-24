@@ -49,10 +49,6 @@ open class VersaPlayer: AVPlayer, AVAssetResourceLoaderDelegate {
     deinit {
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemTimeJumped, object: self)
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self)
-
-        #if DEBUG
-            print("9 \(String(describing: self))")
-        #endif
     }
     
     /// Play content

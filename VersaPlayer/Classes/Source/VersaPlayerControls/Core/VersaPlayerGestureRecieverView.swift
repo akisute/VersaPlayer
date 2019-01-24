@@ -121,12 +121,6 @@ open class VersaPlayerGestureRecieverView: UIView {
     /// Pan gesture initial point
     public var panGestureInitialPoint: CGPoint = CGPoint.zero
 
-    deinit {
-      #if DEBUG
-          print("3 \(String(describing: self))")
-      #endif
-    }
-
     override open func didMoveToSuperview() {
         super.didMoveToSuperview()
         translatesAutoresizingMaskIntoConstraints = false

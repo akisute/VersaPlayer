@@ -25,12 +25,6 @@ open class VersaPlayerControlsCoordinator: View, VersaPlayerGestureRecieverViewD
     /// VersaPlayerGestureRecieverView instance being used
     public var gestureReciever: VersaPlayerGestureRecieverView!
 
-    deinit {
-      #if DEBUG
-          print("2 \(String(describing: self))")
-      #endif
-    }
-
     #if os(macOS)
     
     override open func viewDidMoveToSuperview() {

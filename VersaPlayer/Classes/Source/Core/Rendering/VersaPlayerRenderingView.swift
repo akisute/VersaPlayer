@@ -18,12 +18,6 @@ open class VersaPlayerRenderingView: View {
     /// VPlayerLayer instance used to render player content
     public var renderingLayer: VersaPlayerLayer!
 
-    deinit {
-      #if DEBUG
-          print("6 \(String(describing: self))")
-      #endif
-    }
-
     /// Constructor
     ///
     /// - Parameters:

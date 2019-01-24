@@ -32,10 +32,6 @@ open class VersaPlayerView: View, PIPProtocol {
     
     deinit {
       player.replaceCurrentItem(with: nil)
-
-      #if DEBUG
-          print("1 \(String(describing: self))")
-      #endif
     }
 
     /// VersaPlayer extension dictionary
