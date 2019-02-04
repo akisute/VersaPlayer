@@ -28,7 +28,7 @@ public typealias PIPProtocol = AVPictureInPictureControllerDelegate
 public protocol PIPProtocol {}
 #endif
 
-open class VersaPlayerView: View, PIPProtocol {
+open class VersaPlayerView: View {
     
     deinit {
       player.replaceCurrentItem(with: nil)
@@ -159,7 +159,7 @@ open class VersaPlayerView: View, PIPProtocol {
         player.handler = self
         player.preparePlayerPlaybackDelegate()
         renderingView = VersaPlayerRenderingView(with: self)
-        layout(view: renderingView, into: self)
+        addSubview(renderingView)
     }
     
     /// Layout a view within another view stretching to edges
@@ -269,34 +269,60 @@ open class VersaPlayerView: View, PIPProtocol {
         }
     }
     
+}
+
+// MARK: - View
+
+extension VersaPlayerView {
+    
+    #if os(macOS)
+    
+    override func layout() {
+        super.layout()
+        renderingView.frame = bounds
+    }
+    
+    #else
+    
+    override open func layoutSubviews() {
+        super.layoutSubviews()
+        renderingView.frame = bounds
+    }
+    
+    #endif
+    
+}
+
+// MARK: - PIPProtocol
+
+extension VersaPlayerView: PIPProtocol {
+    
     #if os(iOS)
-    open func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-        print("stopped")
+    
+    public func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         //hide fallback
     }
     
-    open func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-        print("started")
+    public func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         //show fallback
     }
     
-    open func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+    public func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         isPipModeEnabled = false
         controls?.controlsCoordinator.isHidden = false
     }
     
-    open func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+    public func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         controls?.controlsCoordinator.isHidden = true
         isPipModeEnabled = true
     }
     
     public func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
-        print(error.localizedDescription)
     }
     
     public func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
-        
     }
+    
     #endif
     
 }
