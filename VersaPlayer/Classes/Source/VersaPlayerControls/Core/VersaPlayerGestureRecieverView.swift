@@ -39,13 +39,6 @@ open class VersaPlayerGestureRecieverView: View {
     
     open override func viewDidMoveToSuperview() {
         super.viewDidMoveToSuperview()
-        translatesAutoresizingMaskIntoConstraints = false
-        if let parent = superview {
-            topAnchor.constraint(equalTo: parent.topAnchor).isActive = true
-            leftAnchor.constraint(equalTo: parent.leftAnchor).isActive = true
-            rightAnchor.constraint(equalTo: parent.rightAnchor).isActive = true
-            bottomAnchor.constraint(equalTo: parent.bottomAnchor).isActive = true
-        }
         if !ready {
             prepare()
         }
@@ -123,13 +116,6 @@ open class VersaPlayerGestureRecieverView: UIView {
 
     override open func didMoveToSuperview() {
         super.didMoveToSuperview()
-        translatesAutoresizingMaskIntoConstraints = false
-        if let parent = superview {
-            topAnchor.constraint(equalTo: parent.topAnchor).isActive = true
-            leftAnchor.constraint(equalTo: parent.leftAnchor).isActive = true
-            rightAnchor.constraint(equalTo: parent.rightAnchor).isActive = true
-            bottomAnchor.constraint(equalTo: parent.bottomAnchor).isActive = true
-        }
         if !ready {
             prepare()
         }
@@ -222,13 +208,6 @@ open class VersaPlayerGestureRecieverView: UIView {
     
     override open func didMoveToSuperview() {
         super.didMoveToSuperview()
-        translatesAutoresizingMaskIntoConstraints = false
-        if let parent = superview {
-            topAnchor.constraint(equalTo: parent.topAnchor).isActive = true
-            leftAnchor.constraint(equalTo: parent.leftAnchor).isActive = true
-            rightAnchor.constraint(equalTo: parent.rightAnchor).isActive = true
-            bottomAnchor.constraint(equalTo: parent.bottomAnchor).isActive = true
-        }
         if !ready {
             prepare()
         }

@@ -31,20 +31,20 @@ public protocol PIPProtocol {}
 open class VersaPlayerView: View {
     
     deinit {
-      player.replaceCurrentItem(with: nil)
+        player.replaceCurrentItem(with: nil)
     }
-
+    
     /// VersaPlayer extension dictionary
     public var extensions: [String: VersaPlayerExtension] = [:]
     
     /// AVPlayer used in VersaPlayer implementation
     public var player: VersaPlayer!
     
-    /// VersaPlayerControls instance being used to display controls
-    public var controls: VersaPlayerControls? = nil
-    
     /// VersaPlayerRenderingView instance
     public var renderingView: VersaPlayerRenderingView!
+    
+    /// VersaPlayerControlsCoordinator instance to layout controls and the gesture recognizer receiver view
+    private var controlsCoordinator: VersaPlayerControlsCoordinator? = nil
     
     /// VersaPlayerPlaybackDelegate instance
     public weak var playbackDelegate: VersaPlayerPlaybackDelegate? = nil
@@ -59,13 +59,13 @@ open class VersaPlayerView: View {
     /// AVPictureInPictureController instance
     public var pipController: AVPictureInPictureController? = nil
     #endif
-
+    
     /// Whether player is prepared
     public var ready: Bool = false
     
     /// Whether it should autoplay when adding a VPlayerItem
     public var autoplay: Bool = true
-
+    
     /// Whether Player is currently playing
     public var isPlaying: Bool = false
     
@@ -78,11 +78,11 @@ open class VersaPlayerView: View {
     /// Whether PIP Mode is enabled via pipController
     public var isPipModeEnabled: Bool = false
     
-    #if os(macOS)
-    open override var wantsLayer: Bool {
-        get { return true } set { }
+    
+    /// VersaPlayerControls instance that is currently being installed and used by this player view
+    public var controls: VersaPlayerControls? {
+        return controlsCoordinator?.controls
     }
-    #endif
     
     /// Whether Player is Fast Forwarding
     public var isForwarding: Bool {
@@ -111,12 +111,8 @@ open class VersaPlayerView: View {
     ///     - controls: VersaPlayerControls instance used to display controls
     ///     - gestureReciever: Optional gesture reciever view to be used to recieve gestures
     public func use(controls: VersaPlayerControls, with gestureReciever: VersaPlayerGestureRecieverView? = nil) {
-        self.controls = controls
-        let coordinator = VersaPlayerControlsCoordinator()
-        coordinator.player = self
-        coordinator.controls = controls
-        coordinator.gestureReciever = gestureReciever
-        controls.controlsCoordinator = coordinator
+        let coordinator = VersaPlayerControlsCoordinator(playerView: self, controls: controls, gestureReciever: gestureReciever)
+        self.controlsCoordinator = coordinator
         #if os(macOS)
         addSubview(coordinator, positioned: NSWindow.OrderingMode.above, relativeTo: renderingView)
         #else
@@ -277,9 +273,14 @@ extension VersaPlayerView {
     
     #if os(macOS)
     
-    override func layout() {
+    open override var wantsLayer: Bool {
+        get { return true } set { }
+    }
+    
+    override open func layout() {
         super.layout()
         renderingView.frame = bounds
+        controlsCoordinator?.frame = bounds
     }
     
     #else
@@ -287,6 +288,7 @@ extension VersaPlayerView {
     override open func layoutSubviews() {
         super.layoutSubviews()
         renderingView.frame = bounds
+        controlsCoordinator?.frame = bounds
     }
     
     #endif
@@ -309,11 +311,11 @@ extension VersaPlayerView: PIPProtocol {
     
     public func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         isPipModeEnabled = false
-        controls?.controlsCoordinator.isHidden = false
+        controlsCoordinator?.isHidden = false
     }
     
     public func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-        controls?.controlsCoordinator.isHidden = true
+        controlsCoordinator?.isHidden = true
         isPipModeEnabled = true
     }
     

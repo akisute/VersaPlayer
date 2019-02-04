@@ -14,72 +14,76 @@ import UIKit
 import CoreMedia
 import AVFoundation
 
-open class VersaPlayerControlsCoordinator: View, VersaPlayerGestureRecieverViewDelegate {
-
+class VersaPlayerControlsCoordinator: View {
+    
     /// VersaPlayer instance being used
-    public weak var player: VersaPlayerView?
+    private(set) weak var playerView: VersaPlayerView?
     
     /// VersaPlayerControls instance being used
-    public weak var controls: VersaPlayerControls?
+    let controls: VersaPlayerControls
     
     /// VersaPlayerGestureRecieverView instance being used
-    public var gestureReciever: VersaPlayerGestureRecieverView!
-
-    #if os(macOS)
+    let gestureReciever: VersaPlayerGestureRecieverView
     
-    override open func viewDidMoveToSuperview() {
-        super.viewDidMoveToSuperview()
-        configureView()
+    init(playerView: VersaPlayerView, controls: VersaPlayerControls, gestureReciever: VersaPlayerGestureRecieverView?) {
+        self.playerView = playerView
+        self.controls = controls
+        if let gestureReciever = gestureReciever {
+            self.gestureReciever = gestureReciever
+        } else {
+            self.gestureReciever = VersaPlayerGestureRecieverView()
+        }
+        
+        super.init(frame: .zero)
+        
+        self.controls.controlsCoordinator = self
+        if self.gestureReciever.delegate == nil {
+            self.gestureReciever.delegate = self
+        }
+        
+        #if os(macOS)
+        addSubview(self.controls)
+        addSubview(self.gestureReciever, positioned: NSWindow.OrderingMode.below, relativeTo: nil)
+        #else
+        addSubview(self.controls)
+        addSubview(self.gestureReciever)
+        sendSubviewToBack(self.gestureReciever)
+        #endif
     }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+}
+
+// MARK: - View
+
+extension VersaPlayerControlsCoordinator {
+    
+    #if os(macOS)
     
     open override func layout() {
         super.layout()
-        stretchToEdges()
+        controls.frame = bounds
+        gestureReciever.frame = bounds
     }
     
     #else
     
-    open override func didMoveToSuperview() {
-        super.didMoveToSuperview()
-        configureView()
-    }
-    
     open override func layoutSubviews() {
         super.layoutSubviews()
-        stretchToEdges()
+        controls.frame = bounds
+        gestureReciever.frame = bounds
     }
     
     #endif
     
-    public func configureView() {
-        if let h = superview as? VersaPlayerView {
-            player = h
-            if let controls = controls {
-                addSubview(controls)
-            }
-            if gestureReciever == nil {
-                gestureReciever = VersaPlayerGestureRecieverView()
-                gestureReciever.delegate = self
-                #if os(macOS)
-                addSubview(gestureReciever, positioned: NSWindow.OrderingMode.below, relativeTo: nil)
-                #else
-                addSubview(gestureReciever)
-                sendSubviewToBack(gestureReciever)
-                #endif
-            }
-            stretchToEdges()
-        }
-    }
-    
-    public func stretchToEdges() {
-        translatesAutoresizingMaskIntoConstraints = false
-        if let parent = superview {
-            topAnchor.constraint(equalTo: parent.topAnchor).isActive = true
-            leftAnchor.constraint(equalTo: parent.leftAnchor).isActive = true
-            rightAnchor.constraint(equalTo: parent.rightAnchor).isActive = true
-            bottomAnchor.constraint(equalTo: parent.bottomAnchor).isActive = true
-        }
-    }
+}
+
+// MARK: - VersaPlayerGestureRecieverViewDelegate
+
+extension VersaPlayerControlsCoordinator: VersaPlayerGestureRecieverViewDelegate {
     
     /// Notifies when pinch was recognized
     ///
@@ -94,7 +98,6 @@ open class VersaPlayerControlsCoordinator: View, VersaPlayerGestureRecieverViewD
     /// - Parameters:
     ///     - point: CGPoint at which tap was recognized
     open func didTap(at point: CGPoint) {
-        guard let controls = controls else { return }
         // Toggle between show/hide of the controls
         if controls.behaviour.showingControls {
             controls.behaviour.hide()
@@ -108,13 +111,13 @@ open class VersaPlayerControlsCoordinator: View, VersaPlayerGestureRecieverViewD
     /// - Parameters:
     ///     - point: CGPoint at which tap was recognized
     open func didDoubleTap(at point: CGPoint) {
-        guard let player = player else { return }
+        guard let playerView = playerView else { return }
         // Toggle between resizeAspect and resizeAspectFill of the video gravity
-        switch player.renderingView.renderingLayer.playerLayer.videoGravity {
+        switch playerView.renderingView.renderingLayer.playerLayer.videoGravity {
         case .resizeAspect:
-            player.renderingView.renderingLayer.playerLayer.videoGravity = .resizeAspectFill
+            playerView.renderingView.renderingLayer.playerLayer.videoGravity = .resizeAspectFill
         case .resizeAspectFill:
-            player.renderingView.renderingLayer.playerLayer.videoGravity = .resizeAspect
+            playerView.renderingView.renderingLayer.playerLayer.videoGravity = .resizeAspect
         case .resize:
             // Do nothing for non-aspect resize
             break
@@ -134,6 +137,7 @@ open class VersaPlayerControlsCoordinator: View, VersaPlayerGestureRecieverViewD
     }
     
     #if os(tvOS)
+    
     /// Swipe was recognized
     ///
     /// - Parameters:
@@ -141,6 +145,7 @@ open class VersaPlayerControlsCoordinator: View, VersaPlayerGestureRecieverViewD
     open func didSwipe(with direction: UISwipeGestureRecognizer.Direction) {
         
     }
+    
     #endif
-
+    
 }

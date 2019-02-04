@@ -55,7 +55,7 @@ open class VersaPlayerControlsBehaviour {
     /// - Parameters:
     ///     - time: TimeInterval to check whether to update controls.
     open func update(with time: TimeInterval) {
-        guard let controls = controls, let handler = controls.handler else { return }
+        guard let controls = controls, let handler = controls.controlsCoordinator?.playerView else { return }
         elapsedTime = time
         if showingControls
             && shouldHideControls
