@@ -40,6 +40,7 @@ open class VersaPlayerRenderingView: View {
     
     open override func layout() {
         super.layout()
+        renderingLayer.frame = bounds
         renderingLayer.playerLayer.frame = bounds
     }
     
@@ -52,6 +53,7 @@ open class VersaPlayerRenderingView: View {
     
     open override func layoutSubviews() {
         super.layoutSubviews()
+        renderingLayer.frame = bounds
         renderingLayer.playerLayer.frame = bounds
     }
     
