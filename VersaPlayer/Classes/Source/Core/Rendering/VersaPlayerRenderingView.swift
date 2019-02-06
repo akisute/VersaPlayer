@@ -18,10 +18,16 @@ open class VersaPlayerRenderingView: View {
     /// VPlayerLayer instance used to render player content
     public var renderingLayer: VersaPlayerLayer!
     
+    private var isReadyForDisplayKVO: NSKeyValueObservation?
+    
     private weak var playerView: VersaPlayerView?
     
+    
     deinit {
-        removeObserver(renderingLayer.playerLayer, forKeyPath: "isReadyForDisplay")
+        if let kvo = isReadyForDisplayKVO {
+            kvo.invalidate()
+            isReadyForDisplayKVO = nil
+        }
     }
 
     /// Constructor
@@ -32,7 +38,9 @@ open class VersaPlayerRenderingView: View {
         super.init(frame: CGRect.zero)
         self.playerView = playerView
         initializeRenderingLayer(playerView: playerView)
-        addObserver(renderingLayer.playerLayer, forKeyPath: "isReadyForDisplay", options: .new, context: nil)
+        isReadyForDisplayKVO = renderingLayer.playerLayer.observe(\AVPlayerLayer.isReadyForDisplay, options: [.new]) { [weak self] _, change in
+            self?.playerView?.player.onIsReadyForDisplayUpdated(change.newValue!)
+        }
     }
     
     required public init?(coder aDecoder: NSCoder) {
@@ -66,16 +74,5 @@ open class VersaPlayerRenderingView: View {
     }
     
     #endif
-    
-    override open func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        if let obj = object as? AVPlayerLayer, obj == renderingLayer.playerLayer {
-            switch keyPath ?? "" {
-            case "isReadyForDisplay":
-                playerView?.player.onIsReadyForDisplayUpdated(renderingLayer.playerLayer.isReadyForDisplay)
-            default:
-                break
-            }
-        }
-    }
     
 }
