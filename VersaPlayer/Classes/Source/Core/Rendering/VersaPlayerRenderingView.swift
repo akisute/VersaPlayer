@@ -17,14 +17,22 @@ open class VersaPlayerRenderingView: View {
     
     /// VPlayerLayer instance used to render player content
     public var renderingLayer: VersaPlayerLayer!
+    
+    private weak var playerView: VersaPlayerView?
+    
+    deinit {
+        removeObserver(renderingLayer.playerLayer, forKeyPath: "isReadyForDisplay")
+    }
 
     /// Constructor
     ///
     /// - Parameters:
     ///     - player: VersaPlayer instance to render.
-    public init(with player: VersaPlayerView) {
+    public init(playerView: VersaPlayerView) {
         super.init(frame: CGRect.zero)
-        initializeRenderingLayer(with: player)
+        self.playerView = playerView
+        initializeRenderingLayer(playerView: playerView)
+        addObserver(renderingLayer.playerLayer, forKeyPath: "isReadyForDisplay", options: .new, context: nil)
     }
     
     required public init?(coder aDecoder: NSCoder) {
@@ -33,8 +41,8 @@ open class VersaPlayerRenderingView: View {
     
     #if os(macOS)
     
-    private func initializeRenderingLayer(with player: VersaPlayerView) {
-        renderingLayer = VersaPlayerLayer.init(with: player)
+    private func initializeRenderingLayer(playerView: VersaPlayerView) {
+        renderingLayer = VersaPlayerLayer(playerView: playerView)
         layer = renderingLayer.playerLayer
     }
     
@@ -46,8 +54,8 @@ open class VersaPlayerRenderingView: View {
     
     #else
     
-    private func initializeRenderingLayer(with player: VersaPlayerView) {
-        renderingLayer = VersaPlayerLayer.init(with: player)
+    private func initializeRenderingLayer(playerView: VersaPlayerView) {
+        renderingLayer = VersaPlayerLayer(playerView: playerView)
         layer.addSublayer(renderingLayer.playerLayer)
     }
     
@@ -58,5 +66,16 @@ open class VersaPlayerRenderingView: View {
     }
     
     #endif
+    
+    override open func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if let obj = object as? AVPlayerLayer, obj == renderingLayer.playerLayer {
+            switch keyPath ?? "" {
+            case "isReadyForDisplay":
+                playerView?.player.onIsReadyForDisplayUpdated(renderingLayer.playerLayer.isReadyForDisplay)
+            default:
+                break
+            }
+        }
+    }
     
 }

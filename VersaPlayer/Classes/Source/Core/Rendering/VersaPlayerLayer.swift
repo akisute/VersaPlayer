@@ -22,9 +22,9 @@ open class VersaPlayerLayer: CALayer {
         super.init()
     }
     
-    public convenience init(with player: VersaPlayerView) {
+    public convenience init(playerView: VersaPlayerView) {
         self.init()
-        playerLayer = AVPlayerLayer.init(player: player.player)
+        playerLayer = AVPlayerLayer.init(player: playerView.player)
         addSublayer(playerLayer)
     }
     

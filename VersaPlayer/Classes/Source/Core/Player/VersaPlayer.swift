@@ -8,13 +8,13 @@
 
 import AVFoundation
 
-open class VersaPlayer: AVPlayer, AVAssetResourceLoaderDelegate {
+open class VersaPlayer: AVPlayer {
     
     /// Dispatch queue for resource loader
     private let queue = DispatchQueue(label: "quasar.studio.versaplayer")
     
     /// VersaPlayer instance
-    public weak var handler: VersaPlayerView?
+    public private(set) weak var handler: VersaPlayerView?
     
     /// Caption text style rules
     lazy public private(set) var captionStyling: VersaPlayerCaptionStyling = {
@@ -22,16 +22,26 @@ open class VersaPlayer: AVPlayer, AVAssetResourceLoaderDelegate {
     }()
     
     /// Whether player is buffering
-    public var isBuffering: Bool = false
+    public private(set) var isBuffering: Bool = false
     
     deinit {
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemTimeJumped, object: self)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self)
+        disposePlayerPlaybackDelegate()
     }
+    
+    init(handler: VersaPlayerView) {
+        super.init()
+        self.handler = handler
+        self.preparePlayerPlaybackDelegate()
+    }
+    
+}
+
+// MARK: - Public
+
+extension VersaPlayer {
     
     /// Play content
     override open func play() {
-        handler?.playbackDelegate?.playbackWillBegin(player: self)
         if !(handler?.playbackDelegate?.playbackShouldBegin(player: self) ?? true) {
             return
         }
@@ -42,7 +52,9 @@ open class VersaPlayer: AVPlayer, AVAssetResourceLoaderDelegate {
     
     /// Pause content
     override open func pause() {
+        handler?.playbackDelegate?.playbackWillPause(player: self)
         super.pause()
+        handler?.playbackDelegate?.playbackDidPause(player: self)
         handler?.controls?.onPause()
     }
     
@@ -71,10 +83,6 @@ open class VersaPlayer: AVPlayer, AVAssetResourceLoaderDelegate {
             currentItem!.addObserver(self, forKeyPath: "status", options: .new, context: nil)
         }
     }
-    
-}
-
-extension VersaPlayer {
     
     /// Start time
     ///
@@ -110,8 +118,14 @@ extension VersaPlayer {
         }
     }
     
+}
+
+// MARK: - Private
+
+extension VersaPlayer {
+    
     /// Prepare players playback delegate observers
-    open func preparePlayerPlaybackDelegate() {
+    private func preparePlayerPlaybackDelegate() {
         NotificationCenter.default.addObserver(forName: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil, queue: OperationQueue.main) { [weak self] (notification) in
             guard let self = self else { return }
             self.handler?.playbackDelegate?.playbackDidEnd(player: self)
@@ -135,80 +149,107 @@ extension VersaPlayer {
         addObserver(self, forKeyPath: "status", options: NSKeyValueObservingOptions.new, context: nil)
     }
     
+    /// Disposes playback delegate observers that are prepared before
+    private func disposePlayerPlaybackDelegate() {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemTimeJumped, object: self)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self)
+        // removeTimeObserver() is not called, just not bothering to save token for this yet...
+        removeObserver(self, forKeyPath: "status")
+    }
+    
     /// Value observer
     override open func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if let obj = object as? VersaPlayer, obj == self {
-            if keyPath == "status" {
-                switch status {
-                case AVPlayer.Status.readyToPlay:
-                    handler?.playbackDelegate?.playbackReady(player: self)
-                case AVPlayer.Status.failed:
-                    // TODO: get an error reason from the player!
-                    handler?.playbackDelegate?.playbackDidFailed(with: .unknown)
-                    handler?.controls?.onPlaybackFailed(error: VersaPlayerPlaybackError.unknown)
-                default:
-                    break;
-                }
-            }
-        }else {
             switch keyPath ?? "" {
             case "status":
-                if let value = change?[.newKey] as? Int, let status = AVPlayerItem.Status(rawValue: value), let item = object as? AVPlayerItem {
-                    if status == .failed, let error = item.error as NSError?, let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
-                        let playbackError: VersaPlayerPlaybackError
-                        switch underlyingError.code {
-                        case -12937:
-                            playbackError = .authenticationError
-                        case -16840:
-                            playbackError = .unauthorized
-                        case -12660:
-                            playbackError = .forbidden
-                        case -12938:
-                            playbackError = .notFound
-                        case -12661:
-                            playbackError = .unavailable
-                        case -12645, -12889:
-                            playbackError = .mediaFileError
-                        case -12318:
-                            playbackError = .bandwidthExceeded
-                        case -12642:
-                            playbackError = .playlistUnchanged
-                        case -12911:
-                            playbackError = .decoderMalfunction
-                        case -12913:
-                            playbackError = .decoderTemporarilyUnavailable
-                        case -1004:
-                            playbackError = .wrongHostIP
-                        case -1003:
-                            playbackError = .wrongHostDNS
-                        case -1000:
-                            playbackError = .badURL
-                        case -1202:
-                            playbackError = .invalidRequest
-                        default:
-                            playbackError = .unknown
+                switch status {
+                case AVPlayer.Status.unknown:
+                    break
+                case AVPlayer.Status.readyToPlay:
+                    handler?.playbackDelegate?.playbackPlayerIsReady(player: self)
+                case AVPlayer.Status.failed:
+                    // `error` should always be available when `.failed`, but for some safety reason...
+                    if let error = error {
+                        handler?.playbackDelegate?.playbackPlayerDidFail(player: self, error: error)
+                        handler?.controls?.onPlaybackFailed(error: error)
+                    }
+                }
+            default:
+                break
+            }
+        } else if let obj = object as? AVPlayerItem {
+            switch keyPath ?? "" {
+            case "status":
+                if let value = change?[.newKey] as? Int, let status = AVPlayerItem.Status(rawValue: value) {
+                    switch status {
+                    case .unknown:
+                        break
+                    case .readyToPlay:
+                        handler?.playbackDelegate?.playbackItemIsReady(player: self)
+                    case .failed:
+                        // `error` should always be available when `.failed`, but for some safety reason...
+                        if let error = obj.error as NSError?, let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+                            let playbackError: VersaPlayerPlaybackError
+                            switch underlyingError.code {
+                            case -12937:
+                                playbackError = .authenticationError
+                            case -16840:
+                                playbackError = .unauthorized
+                            case -12660:
+                                playbackError = .forbidden
+                            case -12938:
+                                playbackError = .notFound
+                            case -12661:
+                                playbackError = .unavailable
+                            case -12645, -12889:
+                                playbackError = .mediaFileError
+                            case -12318:
+                                playbackError = .bandwidthExceeded
+                            case -12642:
+                                playbackError = .playlistUnchanged
+                            case -12911:
+                                playbackError = .decoderMalfunction
+                            case -12913:
+                                playbackError = .decoderTemporarilyUnavailable
+                            case -1004:
+                                playbackError = .wrongHostIP
+                            case -1003:
+                                playbackError = .wrongHostDNS
+                            case -1000:
+                                playbackError = .badURL
+                            case -1202:
+                                playbackError = .invalidRequest
+                            default:
+                                playbackError = .unknown
+                            }
+                            handler?.playbackDelegate?.playbackItemDidFail(player: self, error: playbackError)
+                            handler?.controls?.onPlaybackFailed(error: playbackError)
                         }
-                        handler?.playbackDelegate?.playbackDidFailed(with: playbackError)
-                        handler?.controls?.onPlaybackFailed(error: playbackError)
                     }
                 }
             case "playbackBufferEmpty":
                 isBuffering = true
-                handler?.playbackDelegate?.startBuffering(player: self)
+                handler?.playbackDelegate?.playbackStartBuffering(player: self)
                 handler?.controls?.onStartBuffering()
             case "playbackLikelyToKeepUp":
                 isBuffering = false
-                handler?.playbackDelegate?.endBuffering(player: self)
+                handler?.playbackDelegate?.playbackEndBuffering(player: self)
                 handler?.controls?.onEndBuffering()
             case "playbackBufferFull":
                 isBuffering = false
-                handler?.playbackDelegate?.endBuffering(player: self)
+                handler?.playbackDelegate?.playbackEndBuffering(player: self)
                 handler?.controls?.onEndBuffering()
             default:
-                break;
+                break
             }
         }
     }
+    
+}
+
+// MARK: - AVAssetResourceLoaderDelegate
+
+extension VersaPlayer: AVAssetResourceLoaderDelegate {
     
     public func resourceLoader(_ resourceLoader: AVAssetResourceLoader, shouldWaitForLoadingOfRequestedResource loadingRequest: AVAssetResourceLoadingRequest) -> Bool {
         guard let url = loadingRequest.request.url else {
@@ -258,6 +299,16 @@ extension VersaPlayer {
         task.resume()
         
         return true
+    }
+    
+}
+
+// MARK: - Callbacks
+
+extension VersaPlayer {
+    
+    func onIsReadyForDisplayUpdated(_ isReady: Bool) {
+        handler?.playbackDelegate?.playbackRenderingAvailabilityDidUpdate(player: self, isReady: isReady)
     }
     
 }

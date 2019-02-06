@@ -151,10 +151,8 @@ open class VersaPlayerView: View {
     /// Prepares the player to play
     open func prepare() {
         ready = true
-        player = VersaPlayer()
-        player.handler = self
-        player.preparePlayerPlaybackDelegate()
-        renderingView = VersaPlayerRenderingView(with: self)
+        player = VersaPlayer(handler: self)
+        renderingView = VersaPlayerRenderingView(playerView: self)
         addSubview(renderingView)
     }
     
