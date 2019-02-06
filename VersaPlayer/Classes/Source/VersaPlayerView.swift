@@ -126,7 +126,7 @@ open class VersaPlayerView: View {
     /// - Parameters:
     ///     - time: Time to be updated to
     public func updateControls(toTime time: CMTime) {
-        controls?.timeDidChange(toTime: time)
+        controls?.onTimeChanged(toTime: time)
     }
     
     /// Add a VersaPlayerExtension instance to the current player

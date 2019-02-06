@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum VersaPlayerPlaybackError {
+public enum VersaPlayerPlaybackError: Error {
     case unknown
     case notFound
     case unauthorized

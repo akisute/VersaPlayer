@@ -11,13 +11,6 @@ import AVFoundation
 
 public protocol VersaPlayerPlaybackDelegate: AnyObject {
     
-    /// Notifies when playback time changes
-    ///
-    /// - Parameters:
-    ///     - player: VersaPlayer being used
-    ///     - time: Current time
-    func timeDidChange(player: VersaPlayer, to time: CMTime)
-    
     /// Whether if playback should begin on specified player
     ///
     /// - Parameters:
@@ -26,23 +19,11 @@ public protocol VersaPlayerPlaybackDelegate: AnyObject {
     /// - Returns: Boolean to validate if should play
     func playbackShouldBegin(player: VersaPlayer) -> Bool
     
-    /// Whether if playback is skipping frames
-    ///
-    /// - Parameters:
-    ///     - player: VersaPlayer being used
-    func playbackDidJump(player: VersaPlayer)
-    
     /// Notifies when player will begin playback
     ///
     /// - Parameters:
     ///     - player: VersaPlayer being used
     func playbackWillBegin(player: VersaPlayer)
-    
-    /// Notifies when playback is ready to play
-    ///
-    /// - Parameters:
-    ///     - player: VersaPlayer being used
-    func playbackReady(player: VersaPlayer)
     
     /// Notifies when playback did begin
     ///
@@ -50,11 +31,30 @@ public protocol VersaPlayerPlaybackDelegate: AnyObject {
     ///     - player: VersaPlayer being used
     func playbackDidBegin(player: VersaPlayer)
     
+    /// Notifies when playback is ready to play
+    ///
+    /// - Parameters:
+    ///     - player: VersaPlayer being used
+    func playbackReady(player: VersaPlayer)
+    
     /// Notifies when player ended playback
     ///
     /// - Parameters:
     ///     - player: VersaPlayer being used
     func playbackDidEnd(player: VersaPlayer)
+    
+    /// Whether if playback is skipping frames
+    ///
+    /// - Parameters:
+    ///     - player: VersaPlayer being used
+    func playbackDidJump(player: VersaPlayer)
+    
+    /// Notifies when playback time changes
+    ///
+    /// - Parameters:
+    ///     - player: VersaPlayer being used
+    ///     - time: Current time
+    func playbackTimeDidChange(player: VersaPlayer, to time: CMTime)
     
     /// Notifies when player starts buffering
     ///
