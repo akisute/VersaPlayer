@@ -1,6 +1,6 @@
 {
   "name": "VersaPlayer",
-  "version": "2.2.7+akisute",
+  "version": "2.2.8+akisute",
   "summary": "Versatile AVPlayer implementation",
   "description": "Versatile AVPlayer implementation.",
   "homepage": "https://github.com/akisute/VersaPlayer",
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/akisute/VersaPlayer.git",
-    "tag": "2.2.7+akisute"
+    "tag": "2.2.8+akisute"
   },
   "platforms": {
     "ios": "9.0",
