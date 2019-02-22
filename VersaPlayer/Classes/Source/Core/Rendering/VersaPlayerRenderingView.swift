@@ -15,9 +15,6 @@ import AVKit
 
 open class VersaPlayerRenderingView: View {
     
-    /// VPlayerLayer instance used to render player content
-    public var renderingLayer: VersaPlayerLayer!
-    
     private var isReadyForDisplayKVO: NSKeyValueObservation?
     
     private weak var playerView: VersaPlayerView?
@@ -37,8 +34,8 @@ open class VersaPlayerRenderingView: View {
     public init(playerView: VersaPlayerView) {
         super.init(frame: CGRect.zero)
         self.playerView = playerView
-        initializeRenderingLayer(playerView: playerView)
-        isReadyForDisplayKVO = renderingLayer.playerLayer.observe(\AVPlayerLayer.isReadyForDisplay, options: [.new]) { [weak self] _, change in
+        playerLayer.player = playerView.player
+        isReadyForDisplayKVO = playerLayer.observe(\AVPlayerLayer.isReadyForDisplay, options: [.new]) { [weak self] _, change in
             self?.playerView?.player.onIsReadyForDisplayUpdated(change.newValue!)
         }
     }
@@ -49,28 +46,22 @@ open class VersaPlayerRenderingView: View {
     
     #if os(macOS)
     
-    private func initializeRenderingLayer(playerView: VersaPlayerView) {
-        renderingLayer = VersaPlayerLayer(playerView: playerView)
-        layer = renderingLayer.playerLayer
+    override open func makeBackingLayer() -> CALayer {
+        return AVPlayerLayer()
     }
     
-    open override func layout() {
-        super.layout()
-        renderingLayer.frame = bounds
-        renderingLayer.playerLayer.frame = bounds
+    public var playerLayer: AVPlayerLayer {
+        return layer as! AVPlayerLayer
     }
     
     #else
     
-    private func initializeRenderingLayer(playerView: VersaPlayerView) {
-        renderingLayer = VersaPlayerLayer(playerView: playerView)
-        layer.addSublayer(renderingLayer.playerLayer)
+    override open class var layerClass: AnyClass {
+        return AVPlayerLayer.self
     }
     
-    open override func layoutSubviews() {
-        super.layoutSubviews()
-        renderingLayer.frame = bounds
-        renderingLayer.playerLayer.frame = bounds
+    public var playerLayer: AVPlayerLayer {
+        return layer as! AVPlayerLayer
     }
     
     #endif

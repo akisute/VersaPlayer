@@ -180,7 +180,7 @@ open class VersaPlayerView: View {
     ///     - enabled: Whether or not to enable
     open func setNativePip(enabled: Bool) {
         if pipController == nil && renderingView != nil {
-            let controller = AVPictureInPictureController(playerLayer: renderingView!.renderingLayer.playerLayer)
+            let controller = AVPictureInPictureController(playerLayer: renderingView!.playerLayer)
             controller?.delegate = self
             pipController = controller
         }

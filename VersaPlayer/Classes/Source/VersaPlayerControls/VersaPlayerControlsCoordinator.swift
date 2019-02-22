@@ -113,11 +113,11 @@ extension VersaPlayerControlsCoordinator: VersaPlayerGestureRecieverViewDelegate
     open func didDoubleTap(at point: CGPoint) {
         guard let playerView = playerView else { return }
         // Toggle between resizeAspect and resizeAspectFill of the video gravity
-        switch playerView.renderingView.renderingLayer.playerLayer.videoGravity {
+        switch playerView.renderingView.playerLayer.videoGravity {
         case .resizeAspect:
-            playerView.renderingView.renderingLayer.playerLayer.videoGravity = .resizeAspectFill
+            playerView.renderingView.playerLayer.videoGravity = .resizeAspectFill
         case .resizeAspectFill:
-            playerView.renderingView.renderingLayer.playerLayer.videoGravity = .resizeAspect
+            playerView.renderingView.playerLayer.videoGravity = .resizeAspect
         case .resize:
             // Do nothing for non-aspect resize
             break
