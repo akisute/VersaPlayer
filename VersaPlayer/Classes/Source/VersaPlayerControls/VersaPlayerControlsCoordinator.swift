@@ -83,6 +83,8 @@ extension VersaPlayerControlsCoordinator {
 
 // MARK: - VersaPlayerGestureRecieverViewDelegate
 
+#if os(macOS)
+
 extension VersaPlayerControlsCoordinator: VersaPlayerGestureRecieverViewDelegate {
     
     /// Notifies when pinch was recognized
@@ -136,16 +138,82 @@ extension VersaPlayerControlsCoordinator: VersaPlayerGestureRecieverViewDelegate
         
     }
     
-    #if os(tvOS)
+}
+
+#elseif os(iOS)
+
+extension VersaPlayerControlsCoordinator: VersaPlayerGestureRecieverViewDelegate {
     
-    /// Swipe was recognized
-    ///
-    /// - Parameters:
-    ///     - direction: gestureDirection
-    open func didSwipe(with direction: UISwipeGestureRecognizer.Direction) {
-        
+    open func didPinch(with gr: UIPinchGestureRecognizer) {
     }
     
-    #endif
+    open func didTap(with gr: UITapGestureRecognizer) {
+        // Toggle between show/hide of the controls
+        if controls.behaviour.showingControls {
+            controls.behaviour.hide()
+        } else {
+            controls.behaviour.show()
+        }
+    }
+    
+    open func didDoubleTap(with gr: UITapGestureRecognizer) {
+        guard let playerView = playerView else { return }
+        // Toggle between resizeAspect and resizeAspectFill of the video gravity
+        switch playerView.renderingView.playerLayer.videoGravity {
+        case .resizeAspect:
+            playerView.renderingView.playerLayer.videoGravity = .resizeAspectFill
+        case .resizeAspectFill:
+            playerView.renderingView.playerLayer.videoGravity = .resizeAspect
+        case .resize:
+            // Do nothing for non-aspect resize
+            break
+        default:
+            // NEVER happens because AVLayerVideoGravity is an ObjC enum so this switch is actually exhaustive...
+            break
+        }
+    }
+    
+    open func didPan(with gr: UIPanGestureRecognizer) {
+    }
     
 }
+
+#elseif os(tvOS)
+
+extension VersaPlayerControlsCoordinator: VersaPlayerGestureRecieverViewDelegate {
+    
+    open func didTap(with gr: UITapGestureRecognizer) {
+        // Toggle between show/hide of the controls
+        if controls.behaviour.showingControls {
+            controls.behaviour.hide()
+        } else {
+            controls.behaviour.show()
+        }
+    }
+    
+    open func didDoubleTap(with gr: UITapGestureRecognizer) {
+        guard let playerView = playerView else { return }
+        // Toggle between resizeAspect and resizeAspectFill of the video gravity
+        switch playerView.renderingView.playerLayer.videoGravity {
+        case .resizeAspect:
+            playerView.renderingView.playerLayer.videoGravity = .resizeAspectFill
+        case .resizeAspectFill:
+            playerView.renderingView.playerLayer.videoGravity = .resizeAspect
+        case .resize:
+            // Do nothing for non-aspect resize
+            break
+        default:
+            // NEVER happens because AVLayerVideoGravity is an ObjC enum so this switch is actually exhaustive...
+            break
+        }
+    }
+    
+    open func didPan(with gr: UIPanGestureRecognizer) {
+    }
+    
+    open func didSwipe(with gr: UISwipeGestureRecognizer) {
+    }
+    
+}
+
+#endif

@@ -13,6 +13,8 @@ import UIKit
 #endif
 import Foundation
 
+#if os(macOS)
+
 public protocol VersaPlayerGestureRecieverViewDelegate: AnyObject {
     
     /// Pinch was recognized
@@ -32,7 +34,7 @@ public protocol VersaPlayerGestureRecieverViewDelegate: AnyObject {
     /// - Parameters:
     ///     - point: CGPoint at wich touch was recognized
     func didDoubleTap(at point: CGPoint)
-
+    
     /// Pan was recognized
     ///
     /// - Parameters:
@@ -40,11 +42,42 @@ public protocol VersaPlayerGestureRecieverViewDelegate: AnyObject {
     ///     - at: initial point recognized
     func didPan(with translation: CGPoint, initially at: CGPoint)
     
-    #if os(tvOS)
-    /// Swipe was recognized
-    ///
-    /// - Parameters:
-    ///     - direction: gestureDirection
-    func didSwipe(with direction: UISwipeGestureRecognizer.Direction)
-    #endif
 }
+
+#elseif os(iOS)
+
+public protocol VersaPlayerGestureRecieverViewDelegate: AnyObject {
+    
+    /// Pinch was recognized
+    func didPinch(with gr: UIPinchGestureRecognizer)
+    
+    /// Tap was recognized
+    func didTap(with gr: UITapGestureRecognizer)
+    
+    /// Double tap was recognized
+    func didDoubleTap(with gr: UITapGestureRecognizer)
+    
+    /// Pan was recognized
+    func didPan(with gr: UIPanGestureRecognizer)
+    
+}
+
+#elseif os(tvOS)
+
+public protocol VersaPlayerGestureRecieverViewDelegate: AnyObject {
+    
+    /// Tap was recognized
+    func didTap(with gr: UITapGestureRecognizer)
+    
+    /// Double tap was recognized
+    func didDoubleTap(with gr: UITapGestureRecognizer)
+    
+    /// Pan was recognized
+    func didPan(with gr: UIPanGestureRecognizer)
+    
+    /// Swipe was recognized
+    func didSwipe(with gr: UISwipeGestureRecognizer)
+    
+}
+
+#endif

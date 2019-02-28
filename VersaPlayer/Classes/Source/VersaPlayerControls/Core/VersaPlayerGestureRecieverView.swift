@@ -111,9 +111,6 @@ open class VersaPlayerGestureRecieverView: UIView {
     /// Whether or not reciever view is ready
     public var ready: Bool = false
     
-    /// Pan gesture initial point
-    public var panGestureInitialPoint: CGPoint = CGPoint.zero
-
     override open func didMoveToSuperview() {
         super.didMoveToSuperview()
         if !ready {
@@ -143,31 +140,25 @@ open class VersaPlayerGestureRecieverView: UIView {
         addGestureRecognizer(pinchGesture!)
     }
     
-    
     @objc open func tapHandler(with sender: UITapGestureRecognizer) {
-        delegate?.didTap(at: sender.location(in: self))
+        delegate?.didTap(with: sender)
     }
     
     @objc open func doubleTapHandler(with sender: UITapGestureRecognizer) {
-        delegate?.didDoubleTap(at: sender.location(in: self))
+        delegate?.didDoubleTap(with: sender)
     }
     
     @objc open func pinchHandler(with sender: UIPinchGestureRecognizer) {
-        if sender.state == .ended {
-            delegate?.didPinch(with: sender.scale)
-        }
+        delegate?.didPinch(with: sender)
     }
     
     @objc open func panHandler(with sender: UIPanGestureRecognizer) {
-        if sender.state == .began {
-            panGestureInitialPoint = sender.location(in: self)
-        }
-        delegate?.didPan(with: sender.translation(in: self), initially: panGestureInitialPoint)
+        delegate?.didPan(with: sender)
     }
     
 }
 
-#else
+#elseif os(tvOS)
 
 open class VersaPlayerGestureRecieverView: UIView {
     
@@ -191,19 +182,8 @@ open class VersaPlayerGestureRecieverView: UIView {
     /// Should become focused
     public var shouldBecomeFocused: Bool = true
     
-    private var initialSwipeLocation: CGPoint = .zero
-    
     open override var canBecomeFocused: Bool {
         return shouldBecomeFocused
-    }
-    
-    open override func didUpdateFocus(in context: UIFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
-        super.didUpdateFocus(in: context, with: coordinator)
-    }
-    
-    open override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesBegan(touches, with: event)
-        initialSwipeLocation = touches.first?.location(in: self) ?? .zero
     }
     
     override open func didMoveToSuperview() {
@@ -250,12 +230,11 @@ open class VersaPlayerGestureRecieverView: UIView {
     }
     
     @objc public func tapHandler(with sender: UITapGestureRecognizer) {
-        delegate?.didTap(at: sender.location(in: self))
+        delegate?.didTap(with: sender)
     }
     
     @objc public func swipeHandler(with sender: UISwipeGestureRecognizer) {
-        let direction: UISwipeGestureRecognizer.Direction = sender.direction
-        delegate?.didSwipe(with: direction)
+        delegate?.didSwipe(with: sender)
     }
     
 }
