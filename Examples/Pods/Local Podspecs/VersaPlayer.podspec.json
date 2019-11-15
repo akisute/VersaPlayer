@@ -20,6 +20,7 @@
     "tvos": "9.0",
     "osx": "10.13"
   },
-  "swift_version": "5.0",
-  "source_files": "VersaPlayer/Classes/**/*"
+  "swift_versions": "5.0",
+  "source_files": "VersaPlayer/Classes/**/*",
+  "swift_version": "5.0"
 }
