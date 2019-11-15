@@ -173,6 +173,8 @@ extension VersaPlayer {
                         handler?.playbackDelegate?.playbackPlayerDidFail(player: self, error: error)
                         handler?.controls?.onPlaybackFailed(error: error)
                     }
+                @unknown default:
+                    break
                 }
             default:
                 break
@@ -225,6 +227,8 @@ extension VersaPlayer {
                             handler?.playbackDelegate?.playbackItemDidFail(player: self, error: playbackError)
                             handler?.controls?.onPlaybackFailed(error: playbackError)
                         }
+                    @unknown default:
+                        break
                     }
                 }
             case "playbackBufferEmpty":
