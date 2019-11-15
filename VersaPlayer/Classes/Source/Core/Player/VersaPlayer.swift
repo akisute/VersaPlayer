@@ -24,14 +24,18 @@ open class VersaPlayer: AVPlayer {
     /// Whether player is buffering
     public private(set) var isBuffering: Bool = false
     
+    /// The periodic time observer token, which is returned from `addPeriodicTimeObserver(forInterval:queue:using:)` for later use.
+    private var periodicTimeObserver: Any?
+    
     deinit {
-        disposePlayerPlaybackDelegate()
+        disposePlayerItemObservers()
+        disposePlayerObservers()
     }
     
     init(handler: VersaPlayerView) {
         super.init()
         self.handler = handler
-        self.preparePlayerPlaybackDelegate()
+        self.preparePlayerObservers()
     }
     
 }
@@ -66,22 +70,9 @@ extension VersaPlayer {
         if let asset = item?.asset as? AVURLAsset, let vitem = item as? VersaPlayerItem, vitem.isEncrypted {
             asset.resourceLoader.setDelegate(self, queue: queue)
         }
-        
-        if currentItem != nil {
-            currentItem!.removeObserver(self, forKeyPath: "playbackBufferEmpty")
-            currentItem!.removeObserver(self, forKeyPath: "playbackLikelyToKeepUp")
-            currentItem!.removeObserver(self, forKeyPath: "playbackBufferFull")
-            currentItem!.removeObserver(self, forKeyPath: "status")
-        }
-        
+        disposePlayerItemObservers()
         super.replaceCurrentItem(with: item)
-        
-        if item != nil {
-            currentItem!.addObserver(self, forKeyPath: "playbackBufferEmpty", options: .new, context: nil)
-            currentItem!.addObserver(self, forKeyPath: "playbackLikelyToKeepUp", options: .new, context: nil)
-            currentItem!.addObserver(self, forKeyPath: "playbackBufferFull", options: .new, context: nil)
-            currentItem!.addObserver(self, forKeyPath: "status", options: .new, context: nil)
-        }
+        preparePlayerItemObservers()
     }
     
     /// Start time
@@ -124,19 +115,8 @@ extension VersaPlayer {
 
 extension VersaPlayer {
     
-    /// Prepare players playback delegate observers
-    private func preparePlayerPlaybackDelegate() {
-        NotificationCenter.default.addObserver(forName: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil, queue: OperationQueue.main) { [weak self] (notification) in
-            guard let self = self else { return }
-            self.handler?.playbackDelegate?.playbackDidEnd(player: self)
-            self.handler?.controls?.onPlaybackEnded()
-        }
-        NotificationCenter.default.addObserver(forName: NSNotification.Name.AVPlayerItemTimeJumped, object: self, queue: OperationQueue.main) { [weak self] (notification) in
-            guard let self = self else { return }
-            self.handler?.playbackDelegate?.playbackDidJump(player: self)
-            self.handler?.controls?.onTimeChanged(toTime: self.currentTime()) // may or may not be needed...
-        }
-        addPeriodicTimeObserver(
+    private func preparePlayerObservers() {
+        periodicTimeObserver = addPeriodicTimeObserver(
             forInterval: CMTime(
                 seconds: 1,
                 preferredTimescale: CMTimeScale(NSEC_PER_SEC)
@@ -146,15 +126,48 @@ extension VersaPlayer {
                 self.handler?.playbackDelegate?.playbackTimeDidChange(player: self, to: time)
                 self.handler?.controls?.onTimeChanged(toTime: time)
         }
+        
         addObserver(self, forKeyPath: "status", options: NSKeyValueObservingOptions.new, context: nil)
     }
     
-    /// Disposes playback delegate observers that are prepared before
-    private func disposePlayerPlaybackDelegate() {
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemTimeJumped, object: self)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self)
-        // removeTimeObserver() is not called, just not bothering to save token for this yet...
+    private func disposePlayerObservers() {
+        if let observer = periodicTimeObserver {
+            removeTimeObserver(observer)
+        }
+        
         removeObserver(self, forKeyPath: "status")
+    }
+    
+    private func preparePlayerItemObservers() {
+        guard let item = currentItem else { return }
+        
+        NotificationCenter.default.addObserver(forName: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: item, queue: OperationQueue.main) { [weak self] (notification) in
+            guard let self = self else { return }
+            self.handler?.playbackDelegate?.playbackDidEnd(player: self)
+            self.handler?.controls?.onPlaybackEnded()
+        }
+        NotificationCenter.default.addObserver(forName: NSNotification.Name.AVPlayerItemTimeJumped, object: item, queue: OperationQueue.main) { [weak self] (notification) in
+            guard let self = self else { return }
+            self.handler?.playbackDelegate?.playbackDidJump(player: self)
+            self.handler?.controls?.onTimeChanged(toTime: self.currentTime()) // may or may not be needed...
+        }
+        
+        item.addObserver(self, forKeyPath: "playbackBufferEmpty", options: .new, context: nil)
+        item.addObserver(self, forKeyPath: "playbackLikelyToKeepUp", options: .new, context: nil)
+        item.addObserver(self, forKeyPath: "playbackBufferFull", options: .new, context: nil)
+        item.addObserver(self, forKeyPath: "status", options: .new, context: nil)
+    }
+    
+    private func disposePlayerItemObservers() {
+        guard let item = currentItem else { return }
+        
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemTimeJumped, object: item)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: item)
+        
+        item.removeObserver(self, forKeyPath: "playbackBufferEmpty")
+        item.removeObserver(self, forKeyPath: "playbackLikelyToKeepUp")
+        item.removeObserver(self, forKeyPath: "playbackBufferFull")
+        item.removeObserver(self, forKeyPath: "status")
     }
     
     /// Value observer
